@@ -12,7 +12,8 @@ var userSchema = mongoose.Schema({
         default:"Driving License"
     }
 },{
-    timestamps:true
+    timestamps:true,
+    // collection: 'userinfo'  this is used to specify collection name
 })
 
 module.exports= mongoose.model('User',userSchema)
