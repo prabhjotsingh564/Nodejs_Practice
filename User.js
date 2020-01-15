@@ -10,7 +10,11 @@ var userSchema = mongoose.Schema({
     idProof:{
         type:String,
         default:"Driving License"
+    },
+     password: {
+        type: String
     }
+
 },{
     timestamps:true,
     // collection: 'userinfo'  this is used to specify collection name
