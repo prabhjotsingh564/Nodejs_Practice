@@ -5,11 +5,7 @@ const app =express();
 var UserModel = require('./User');
 var bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
-
-
-
-
-
+const JWT = require('jsonwebtoken');
 //establish connection with mongodb database localhost
 mongoose.connect('mongodb://localhost:27017/nodenew', {
             useNewUrlParser: true,
@@ -26,24 +22,50 @@ app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
 app.use(bodyParser.json())
 
-//getting all the users from the database
-app.get("/users",(req,res,next) => {
-    UserModel.find({})
-    .then((users) => {
-        res.status(200).json({
-            response: true,
-            users: users
-        });
+
+const VerifyAuthentication = (req, res, next) => {
+    let token = req.headers.authorization.split(' ');
+    token = token[1];
+    JWT.verify(token, 'Welcome to Nugen', function (err, decodedInfo) {
+        if (err) {
+            res.status(422).json({
+                response: false,
+                error: err.message
+            });
+        } else {
+            req.body.decodedInfo = decodedInfo;
+            next();
+        }
     })
-    .catch((err) => {
-        res.status(422).json({
-            error: err,
-            response: false
-        });
-    });
+};
 
 
-})
+//getting all the users from the database
+app.get("/users", VerifyAuthentication, (req, res, next) => {
+    UserModel.find({ _id: req.body.decodedInfo.id })
+        .then((response) => {
+            UserModel.find({})
+                .then((users) => {
+                    res.status(200).json({
+                        response: true,
+                        users: users
+                    });
+                })
+                .catch((err) => {
+                    res.status(422).json({
+                        error: err,
+                        response: false
+                    });
+                });
+        })
+        .catch(err => {
+            res.status(422).json({
+                response: true,
+                error: err
+            });
+        })
+});
+
 
 //adding a new user to the data
 app.post("/user",(req,res,next) => {
@@ -78,10 +100,19 @@ app.post("/login",(req,res,next) => {
             bcrypt.compare(req.body.password, user.password, function (err, response) {
                 // res == true
                 if (response == true) {
-                    res.status(200).json({
-                        response: true,
-                        msg: "logged in successfully"
-                    });
+                    JWT.sign({
+                        id: user._id,
+                        phone: user.phone
+                    }, 'Welcome to Nugen',{
+                        expiresIn: '1d'
+                    }, function (err, token) {
+                        res.status(200).json({
+                            response: true,
+                            token,
+                            msg: "logged in successfully"
+                        });
+                    })
+
                 } else {
                     res.status(422).json({
                         response: false,
@@ -89,6 +120,7 @@ app.post("/login",(req,res,next) => {
                     });
                 }
             });
+
         } else {
             res.status(422).json({
                 response: false,
@@ -97,6 +129,7 @@ app.post("/login",(req,res,next) => {
         }
     });
 })
+
 
 app.listen(3000,() => {
     console.log('server starts....')
