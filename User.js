@@ -1,8 +1,10 @@
 var mongoose = require('mongoose')
+const uniqueValidator = require('mongoose-unique-validator');
 var userSchema = mongoose.Schema({
     phone:{
         type:String,
-        default:"12345"
+        default:"12345",
+        unique: true
     },
     address:{
         type:String
@@ -19,5 +21,7 @@ var userSchema = mongoose.Schema({
     timestamps:true,
     // collection: 'userinfo'  this is used to specify collection name
 })
+
+userSchema.plugin(uniqueValidator, {message: '{PATH}({VALUE}) already exist!!'});
 
 module.exports= mongoose.model('User',userSchema)

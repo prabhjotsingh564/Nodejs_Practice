@@ -40,94 +40,157 @@ const VerifyAuthentication = (req, res, next) => {
 };
 
 
-//getting all the users from the database
-app.get("/users", VerifyAuthentication, (req, res, next) => {
-    UserModel.find({ _id: req.body.decodedInfo.id })
-        .then((response) => {
-            UserModel.find({})
-                .then((users) => {
-                    res.status(200).json({
-                        response: true,
-                        users: users
-                    });
-                })
-                .catch((err) => {
-                    res.status(422).json({
-                        error: err,
-                        response: false
-                    });
-                });
-        })
-        .catch(err => {
-            res.status(422).json({
-                response: true,
-                error: err
-            });
-        })
-});
+// //getting all the users from the database
+// app.get("/users", VerifyAuthentication,  (req, res, next) => {
+//     UserModel.find({ _id: req.body.decodedInfo.id })
+//         .then((response) => {
+//             UserModel.find({})
+//                 .then((users) => {
+//                     res.status(200).json({
+//                         response: true,
+//                         users: users
+//                     });
+//                 })
+//                 .catch((err) => {
+//                     res.status(422).json({
+//                         error: err,
+//                         response: false
+//                     });
+//                 });
+//         })
+//         .catch(err => {
+//             res.status(422).json({
+//                 response: true,
+//                 error: err
+//             });
+//         })
+// });
 
+app.get('/users' ,VerifyAuthentication,async (req,res,next) => {
 
-//adding a new user to the data
-app.post("/user",(req,res,next) => {
-    bcrypt.hash(req.body.password, 10, function (error, pswd) {
-        let user = new UserModel({
-            phone: req.body.phone,
-            address: req.body.address,
-            idProof: req.body.idProof,
-            password: pswd
-        });
-        user.save()
-            .then((usr) => {
+    try{
+        let user = await UserModel.find({_id: req.body.decodedInfo.id})
+        if(user){
+            let usr= await UserModel.find({})
+            if(usr){
                 res.status(200).json({
-                    msg: 1,
-                    data: 'User has been inserted successfully',
-                    user: usr
+                    response: true,
+                    users: usr
                 });
-            })
-            .catch((err) => {
-                res.status(422).json({
-                    error: err,
-                    response: false
-                });
-            });
-    })
+            }
+        }
+    }
+    catch(err){
+        res.status(422).json({
+            response: false,
+            error: err,
+        });
+    }
 })
 
-app.post("/login",(req,res,next) => {
-    UserModel.findOne({ phone: req.body.phone.toString() })
-    .then((user) => {
-        if (user) {
-            bcrypt.compare(req.body.password, user.password, function (err, response) {
-                // res == true
-                if (response == true) {
-                    JWT.sign({
+//adding a new user to the data
+app.post("/user" , async (req,res,next) => {
+    try{
+        let encrypedPass = await bcrypt.hash(req.body.password,10);
+        req.body.password=encrypedPass;
+        let user = new UserModel({...req.body});
+        let usr = await user.save();
+        if(usr){
+            res.status(200).json({
+                msg: 1,
+                data: 'User has been inserted successfully',
+                user: usr
+            })
+        }
+    }
+    catch(err){
+        res.status(422).json({
+            error: err,
+            response: false
+        });
+    }
+})
+
+
+
+
+
+// app.post("/login",(req,res,next) => {
+//     UserModel.findOne({ phone: req.body.phone.toString() })
+//     .then((user) => {
+//         if (user) {
+//             bcrypt.compare(req.body.password, user.password, function (err, response) {
+//                 // res == true
+//                 if (response == true) {
+//                     JWT.sign({
+//                         id: user._id,
+//                         phone: user.phone
+//                     }, 'Welcome to Nugen',{
+//                         expiresIn: '1d'
+//                     }, function (err, token) {
+//                         res.status(200).json({
+//                             response: true,
+//                             token,
+//                             msg: "logged in successfully"
+//                         });
+//                     })
+
+//                 } else {
+//                     res.status(422).json({
+//                         response: false,
+//                         msg: "Wrong Phone/Password"
+//                     });
+//                 }
+//             });
+
+//         } else {
+//             res.status(422).json({
+//                 response: false,
+//                 msg: "Wrong Phone/Password"
+//             });
+//         }
+//     });
+// })
+
+app.post('/login',async (req,res,next) => {
+    try{
+        let user= await UserModel.findOne({ phone: req.body.phone.toString() });
+        if(user){
+            let auth=await bcrypt.compare(req.body.password, user.password);
+            if(auth){
+                let token= await JWT.sign({
                         id: user._id,
                         phone: user.phone
-                    }, 'Welcome to Nugen',{
+                        }, 'Welcome to Nugen',{
                         expiresIn: '1d'
-                    }, function (err, token) {
-                        res.status(200).json({
-                            response: true,
-                            token,
-                            msg: "logged in successfully"
                         });
-                    })
-
-                } else {
-                    res.status(422).json({
-                        response: false,
-                        msg: "Wrong Phone/Password"
-                    });
-                }
-            });
-
-        } else {
+                        if(token){
+                            res.status(200).json({
+                                response: true,
+                                token,
+                                msg: "logged in successfully"
+                            });
+                        }
+            }else{
+                res.status(422).json({
+                    response: false,
+                    msg: "password is not correct"
+                })
+            }
+        }else{
             res.status(422).json({
                 response: false,
+                msg: "phone is not correct"
+            })
+        }
+    }
+    catch(err){
+            res.status(422).json({
+                response: false,
+                error:err,
                 msg: "Wrong Phone/Password"
             });
-        }
-    });
+    }
 })
 
 
