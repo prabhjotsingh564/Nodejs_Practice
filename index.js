@@ -40,31 +40,6 @@ const VerifyAuthentication = (req, res, next) => {
 };
 
 
-// //getting all the users from the database
-// app.get("/users", VerifyAuthentication,  (req, res, next) => {
-//     UserModel.find({ _id: req.body.decodedInfo.id })
-//         .then((response) => {
-//             UserModel.find({})
-//                 .then((users) => {
-//                     res.status(200).json({
-//                         response: true,
-//                         users: users
-//                     });
-//                 })
-//                 .catch((err) => {
-//                     res.status(422).json({
-//                         error: err,
-//                         response: false
-//                     });
-//                 });
-//         })
-//         .catch(err => {
-//             res.status(422).json({
-//                 response: true,
-//                 error: err
-//             });
-//         })
-// });
 
 app.get('/users' ,VerifyAuthentication,async (req,res,next) => {
 
@@ -110,47 +85,6 @@ app.post("/user" , async (req,res,next) => {
         });
     }
 })
-
-
-
-
-
-// app.post("/login",(req,res,next) => {
-//     UserModel.findOne({ phone: req.body.phone.toString() })
-//     .then((user) => {
-//         if (user) {
-//             bcrypt.compare(req.body.password, user.password, function (err, response) {
-//                 // res == true
-//                 if (response == true) {
-//                     JWT.sign({
-//                         id: user._id,
-//                         phone: user.phone
-//                     }, 'Welcome to Nugen',{
-//                         expiresIn: '1d'
-//                     }, function (err, token) {
-//                         res.status(200).json({
-//                             response: true,
-//                             token,
-//                             msg: "logged in successfully"
-//                         });
-//                     })
-
-//                 } else {
-//                     res.status(422).json({
-//                         response: false,
-//                         msg: "Wrong Phone/Password"
-//                     });
-//                 }
-//             });
-
-//         } else {
-//             res.status(422).json({
-//                 response: false,
-//                 msg: "Wrong Phone/Password"
-//             });
-//         }
-//     });
-// })
 
 app.post('/login',async (req,res,next) => {
     try{
