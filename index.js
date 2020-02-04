@@ -2,10 +2,12 @@ const  http = require('http')
 const express =require('express')
 var mongoose = require('mongoose');
 const app =express();
-var UserModel = require('./User');
+var UserModel = require('./app/model/User');
 var bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const JWT = require('jsonwebtoken');
+const FUNCTION = require('./function');
+
 //establish connection with mongodb database localhost
 mongoose.connect('mongodb://localhost:27017/nodenew', {
             useNewUrlParser: true,
@@ -17,6 +19,8 @@ mongoose.connect('mongodb://localhost:27017/nodenew', {
             console.log('Error While Establishing Connection');
     });
 
+
+mongoose.set('useCreateIndex', true);
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
@@ -24,19 +28,30 @@ app.use(bodyParser.json())
 
 
 const VerifyAuthentication = (req, res, next) => {
+   if(req.headers.authorization){     
     let token = req.headers.authorization.split(' ');
     token = token[1];
     JWT.verify(token, 'Welcome to Nugen', function (err, decodedInfo) {
         if (err) {
-            res.status(422).json({
-                response: false,
-                error: err.message
-            });
+            const data={
+                status:422,
+                msg:" ",
+                error:err.message
+            }
+            FUNCTION.error(data,res);
         } else {
             req.body.decodedInfo = decodedInfo;
             next();
         }
     })
+   }else{
+       const data ={
+           status:422,
+           msg:" ",
+           error:"Authorization token is required"
+       }
+    FUNCTION.error(data,res);
+   }
 };
 
 
@@ -48,18 +63,26 @@ app.get('/users' ,VerifyAuthentication,async (req,res,next) => {
         if(user){
             let usr= await UserModel.find({})
             if(usr){
-                res.status(200).json({
-                    response: true,
-                    users: usr
-                });
+                FUNCTION.success({
+                    status:200,
+                    msg:"users fetched successfully",
+                    data:usr
+                },res);
+            }else{
+                FUNCTION.error({
+                    status:422,
+                    msg:" ",
+                    error:"users not found"
+                },res);
             }
         }
     }
     catch(err){
-        res.status(422).json({
-            response: false,
-            error: err,
-        });
+       FUNCTION.error({
+           status:422,
+           msg:" ",
+           error:err
+       },res)
     }
 })
 
@@ -71,18 +94,19 @@ app.post("/user" , async (req,res,next) => {
         let user = new UserModel({...req.body});
         let usr = await user.save();
         if(usr){
-            res.status(200).json({
-                msg: 1,
-                data: 'User has been inserted successfully',
-                user: usr
-            })
+            FUNCTION.success({
+                status:200,
+                msg:"users added successfully",
+                data:usr
+            },res);
         }
     }
     catch(err){
-        res.status(422).json({
-            error: err,
-            response: false
-        });
+        FUNCTION.error({
+            status:422,
+            msg:" ",
+            error:err
+        },res);
     }
 })
 
@@ -99,31 +123,33 @@ app.post('/login',async (req,res,next) => {
                         expiresIn: '1d'
                         });
                         if(token){
-                            res.status(200).json({
-                                response: true,
-                                token,
-                                msg: "logged in successfully"
-                            });
+                            FUNCTION.success({
+                                status:200,
+                                msg:"logged in successfully",
+                                data:{token:token}
+                            },res);
                         }
             }else{
-                res.status(422).json({
-                    response: false,
-                    msg: "password is not correct"
-                })
+                FUNCTION.error({
+                    status:422,
+                    msg:"password is not correct ",
+                    error:" "
+                },res);
             }
         }else{
-            res.status(422).json({
-                response: false,
-                msg: "phone is not correct"
-            })
+            FUNCTION.error({
+                status:422,
+                msg:" phone is not correct",
+                error:" "
+            },res);
         }
     }
     catch(err){
-            res.status(422).json({
-                response: false,
-                error:err,
-                msg: "Wrong Phone/Password"
-            });
+        FUNCTION.error({
+            status:422,
+            msg:"Wrong Phone/Password",
+            error:err
+        },res);
     }
 })
 
