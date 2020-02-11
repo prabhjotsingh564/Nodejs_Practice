@@ -28,6 +28,7 @@ app.use(bodyParser.json())
 
 
 app.use('/user',require('./app/router/UserRouter'));
+app.use('/userdetail',require('./app/router/UserDetailsRouter'));
 
 app.listen(3000,() => {
     console.log('server starts....')
