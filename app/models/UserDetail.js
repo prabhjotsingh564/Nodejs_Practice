@@ -8,6 +8,9 @@ var UserDetailSchema = mongoose.Schema({
     },
     nickName:{
         type:String,
+    },
+    profilePic:{
+        type:String
     }
 },{
     timestamps: true

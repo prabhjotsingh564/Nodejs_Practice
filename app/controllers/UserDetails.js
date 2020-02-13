@@ -20,6 +20,7 @@ module.exports.getAllUsers = async (req,res,next) => {
 
 module.exports.save = async (req, res, next) => {
     try {
+        req.body.profilePic = req.file.filename;
         let user = await new UserDetailModel({...req.body}).save();
         FUNCTION.success({
             status: 200,
