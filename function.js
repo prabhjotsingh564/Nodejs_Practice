@@ -14,4 +14,6 @@ function success(data,res){
     })
 }
 
+
+
 module.exports={error,success};
