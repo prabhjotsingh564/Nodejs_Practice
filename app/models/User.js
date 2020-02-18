@@ -7,10 +7,12 @@ var userSchema = mongoose.Schema({
         unique: true
     },
     address:{
-        type:String
+        type:String,
+        trim:true
     },
     idProof:{
         type:String,
+        lowercase:true,
         default:"Driving License"
     },
      password: {
