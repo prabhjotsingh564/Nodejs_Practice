@@ -17,7 +17,24 @@ module.exports.getAllUsers = async (req,res,next) => {
         });
     }
 }
-
+module.exports.getUserById = async (req,res,next) => {
+    try{
+        let userId = req.params.userId;
+        let user = await UserDetailModel.find({_id:userId}).populate('user')
+        FUNCTION.success({
+            status:200,
+            msg:"user by id fetch successfully",
+            data:user
+        },res);
+    }   
+    catch(err){
+        FUNCTION.error({
+            status:422,
+            msg:" error while fetching user by Id",
+            error:err
+        },res);
+    }
+}
 module.exports.save = async (req, res, next) => {
     try {
         req.body.profilePic = req.file.filename;

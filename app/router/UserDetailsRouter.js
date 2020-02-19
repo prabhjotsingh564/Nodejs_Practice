@@ -23,8 +23,10 @@ const checkForValidationErrors = (req,res,next) => {
     }
 }
 
-router.post("/" ,userValidation,checkForValidationErrors,upload.single('file'),UserDetailController.save);
+// router.post("/" ,userValidation,checkForValidationErrors,upload.single('file'),UserDetailController.save);
+router.post("/" ,upload.single('file'),UserDetailController.save);
 router.get("/" ,UserDetailController.getAllUsers);
+router.get('/:userId',UserDetailController.getUserById);
 
 
 module.exports = router;
