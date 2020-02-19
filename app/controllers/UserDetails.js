@@ -1,6 +1,6 @@
 var UserDetailModel = require('../models/UserDetail');//
 const FUNCTION = require('../../function');
-
+const mongoose = require('mongoose');
 module.exports.getAllUsers = async (req,res,next) => {
     try{
         let users = await UserDetailModel.find({}).populate('user');
@@ -20,7 +20,19 @@ module.exports.getAllUsers = async (req,res,next) => {
 module.exports.getUserById = async (req,res,next) => {
     try{
         let userId = req.params.userId;
-        let user = await UserDetailModel.find({_id:userId}).populate('user')
+        let user = await UserDetailModel.aggregate([
+            {
+                $match:{
+                    _id:mongoose.Types.ObjectId(userId)
+                }
+            },
+            {
+                $project:{
+                    nickName:1,
+                    _id:0
+                }
+            }
+        ])
         FUNCTION.success({
             status:200,
             msg:"user by id fetch successfully",
